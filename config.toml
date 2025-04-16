@@ -1,0 +1,7 @@
+listen_host = "127.0.0.1"
+listen_port = 3000
+drop_user = "lumilter"
+secret = "secretkittens" 
+stump = "/rx/i.php/"
+delim = "/-/-/"
+url = "https://example.com"

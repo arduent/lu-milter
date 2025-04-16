@@ -1,0 +1,105 @@
+.TH LU-MILTER 8 "April 2025" "lu‑milter 0.1a" "User Commands"
+.SH NAME
+lu-milter \- generate List-Unsubscribe headers with HMAC verification
+.SH SYNOPSIS
+.B lu-milter
+[\fB\-c\fR \fIFILE\fR] [\fB\-p\fR \fIFILE\fR] [\fB\-d\fR] [\fB\-l\fR \fIFILE\fR] [\fB\-h\fR] [\fB\-V\fR]
+.SH DESCRIPTION
+.B lu-milter
+is a small Milter (mail filter) written in Rust.  It listens on a TCP socket, inspects the SMTP envelope, and appends a
+.IR List-Unsubscribe
+header whose URL encodes the sender (MAIL FROM) and recipient (RCPT TO) addresses together with an HMAC-SHA‑256 token.  The token is computed from a shared secret so that subsequent HTTP POST unsubscribe requests can be validated.
+.SH CONFIGURATION
+Configuration is read from a TOML file (default \fIconfig.toml\fR).
+.TP
+.I listen_host
+IP address to bind (default 127.0.0.1).
+.TP
+.I listen_port
+Port (default 3000).
+.TP
+.I drop_user
+Unprivileged UNIX user the daemon will switch to after binding.
+.TP
+.I secret
+Shared secret for HMAC generation.
+.TP
+.I stump
+Path segment that separates the base URL from encoded parameters. Must include a trailing slash.
+.TP
+.I delim
+Delimiter inserted between encoded fields inside the URL. Avoid a bare "/".
+.TP
+.I url
+Base HTTPS URL that receives unsubscribe requests.
+.SH OPTIONS
+.TP
+.BR \-c ,\ \-\-config " " FILE
+Specify alternate configuration file.
+.TP
+.BR \-p ,\ \-\-pid " " FILE
+Write the daemon’s PID to FILE.
+.TP
+.BR \-d ,\ \-\-daemon
+Run as a background daemon.
+.TP
+.BR \-l ,\ \-\-log " " FILE
+Write log output to FILE (default /var/log/lu-milter.log).
+.TP
+.BR \-h ,\ \-\-help
+Display help and exit.
+.TP
+.BR \-V ,\ \-\-version
+Print version information.
+.SH USAGE EXAMPLE
+.nf
+lu-milter \
+  -p /run/lu-milter.pid \
+  -l /var/lumilter/lu-milter.log \
+  -c /var/lumilter/config.toml \
+  -d
+.fi
+.SH POSTFIX INTEGRATION
+Add the following to \fImain.cf\fR:
+.nf
+milter_protocol = 6
+milter_default_action = accept
+smtpd_milters = inet:127.0.0.1:3000
+non_smtpd_milters = $smtpd_milters
+.fi
+If you also run a DKIM‑signing milter, list it \fIafter\fR lu‑milter so headers added by lu‑milter do not invalidate the DKIM signature.
+.SH FILES
+.TP
+.I config.toml
+Configuration in TOML format.
+.TP
+.I /var/log/lu-milter.log
+Default log file.
+.TP
+.I sample.php
+Sample PHP script output file containing unsubscribe addresses.
+.SH SEE ALSO
+.BR postfix (1),
+.BR sendmail (1)
+.SH AUTHOR
+Waitman Gobble <waitman@quantificant.com>
+.SH LICENSE
+Copyright (C) 2025 Waitman Gobble
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, see <https://www.gnu.org/licenses/>.
+
+Contact by email: <waitman@quantificant.com>
+<https://quantificant.com/contact>
+
+
